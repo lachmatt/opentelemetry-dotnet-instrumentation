@@ -30,7 +30,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3.3.0
-
+      - uses: actions/setup-go@v3
       - name: Verify all native files have license headers
         shell: bash
         run: |
