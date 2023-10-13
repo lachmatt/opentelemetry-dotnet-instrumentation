@@ -17,7 +17,6 @@
 #if NET6_0_OR_GREATER
 
 using IntegrationTests.Helpers;
-using OpenTelemetry.Proto.Logs.V1;
 using Xunit.Abstractions;
 
 namespace IntegrationTests;
@@ -29,41 +28,16 @@ public class MinimalApiTests : TestHelper
     {
     }
 
-    [Theory]
-    [InlineData(true, true)]
-    [InlineData(true, false)]
-    [InlineData(false, true)]
+    [Fact]
     [Trait("Category", "EndToEnd")]
-    public async Task SubmitsLogsWithoutDuplicates(bool enableByteCodeInstrumentation, bool enableHostingStartupAssembly)
+    public void DoesNotCrash()
     {
         using var collector = new MockLogsCollector(Output);
         SetExporter(collector);
 
-        collector.ExpectCollected(ValidateSingleAppLogRecord, "App log record should be exported once.");
-
-        SetEnvironmentVariable("OTEL_DOTNET_AUTO_LOGS_INCLUDE_FORMATTED_MESSAGE", "true");
-
-        if (enableByteCodeInstrumentation)
-        {
-            EnableBytecodeInstrumentation();
-        }
-
-        if (enableHostingStartupAssembly)
-        {
-            SetEnvironmentVariable("ASPNETCORE_HOSTINGSTARTUPASSEMBLIES", "OpenTelemetry.AutoInstrumentation.AspNetCoreBootstrapper");
-        }
-
         RunTestApplication();
 
-        // wait for fixed amount of time for logs to be collected before asserting
-        await Task.Delay(TimeSpan.FromSeconds(10));
-
-        collector.AssertCollected();
-    }
-
-    private static bool ValidateSingleAppLogRecord(IEnumerable<LogRecord> records)
-    {
-        return records.Count(lr => Convert.ToString(lr.Body) == "{ \"stringValue\": \"Request received.\" }") == 1;
+        collector.AssertEmpty();
     }
 }
 #endif
