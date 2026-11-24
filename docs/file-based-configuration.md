@@ -20,12 +20,11 @@ You can also specify the configuration file path (default: `config.yaml`):
 OTEL_CONFIG_FILE=/path/to/config.yaml
 ```
 
-If the configured YAML path is reported as missing, an error is logged and an
-empty file-based configuration is used. If the file is found but contains
-invalid YAML or cannot be deserialized, automatic instrumentation is disabled
-and the application continues. Set
-`OTEL_DOTNET_AUTO_FAIL_FAST_ENABLED=true` in the environment to fail application
-startup instead; `fail_fast` in an invalid file cannot be read.
+If the YAML file is missing, unreadable, or invalid, automatic instrumentation
+logs the error and stops initialization. The application continues unless
+`OTEL_DOTNET_AUTO_FAIL_FAST_ENABLED=true` is set in the environment. This also
+applies to the default `config.yaml` path. The environment flag controls
+startup because a usable YAML configuration is unavailable.
 
 In your config file you can use environment variables in the format `${ENVIRONMENT_VARIABLE}`
 instead of a fixed value.

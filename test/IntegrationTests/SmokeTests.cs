@@ -494,19 +494,25 @@ public class SmokeTests : TestHelper
 #if NETFRAMEWORK
     [Theory]
     [Trait("Category", "EndToEnd")]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void MalformedFileConfigurationHonorsFailFast(bool failFast)
+    [InlineData("file_format:\n  - '1.0'\n", false)]
+    [InlineData("file_format:\n  - '1.0'\n", true)]
+    [InlineData(null, false)]
+    [InlineData(null, true)]
+    public void FileConfigurationFailureHonorsFailFast(string? yamlContents, bool failFast)
     {
-        var configFile = Path.GetTempFileName();
-        File.WriteAllText(configFile, "file_format:\n  - '1.0'\n");
-        SetEnvironmentVariable("OTEL_EXPERIMENTAL_FILE_BASED_CONFIGURATION_ENABLED", "true");
-        SetEnvironmentVariable("OTEL_CONFIG_FILE", configFile);
-        SetEnvironmentVariable("OTEL_DOTNET_AUTO_FAIL_FAST_ENABLED", failFast ? "true" : "false");
-        SetEnvironmentVariable("OTEL_DOTNET_AUTO_LOGGER", "console");
-
+        var configFile = Path.Combine(Path.GetTempPath(), $"otel-config-{Guid.NewGuid():N}.yaml");
         try
         {
+            if (yamlContents is not null)
+            {
+                File.WriteAllText(configFile, yamlContents);
+            }
+
+            SetEnvironmentVariable("OTEL_EXPERIMENTAL_FILE_BASED_CONFIGURATION_ENABLED", "true");
+            SetEnvironmentVariable("OTEL_CONFIG_FILE", configFile);
+            SetEnvironmentVariable("OTEL_DOTNET_AUTO_FAIL_FAST_ENABLED", failFast ? "true" : "false");
+            SetEnvironmentVariable("OTEL_DOTNET_AUTO_LOGGER", "console");
+
             var (standardOutput, _, _) = RunTestApplication(
                 assertExitCode: failFast ? static (_, exitCode) => Assert.NotEqual(0, exitCode) : null);
 

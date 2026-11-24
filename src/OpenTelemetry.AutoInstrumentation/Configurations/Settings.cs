@@ -3,7 +3,6 @@
 
 using OpenTelemetry.AutoInstrumentation.Configurations.FileBasedConfiguration;
 using OpenTelemetry.AutoInstrumentation.Configurations.FileBasedConfiguration.Parser;
-using OpenTelemetry.AutoInstrumentation.Logging;
 
 namespace OpenTelemetry.AutoInstrumentation.Configurations;
 
@@ -13,7 +12,6 @@ namespace OpenTelemetry.AutoInstrumentation.Configurations;
 internal abstract class Settings
 {
     private static readonly Lazy<YamlConfiguration> YamlConfiguration = new(ReadYamlConfiguration);
-    private static readonly IOtelLogger Logger = OtelLogging.GetLogger();
 
     internal static bool IsFileConfigurationEnabled { get; } = Environment.GetEnvironmentVariable(ConfigurationKeys.FileBasedConfiguration.Enabled) == "true";
 
@@ -65,15 +63,7 @@ internal abstract class Settings
 
     private static YamlConfiguration ReadYamlConfiguration()
     {
-        var configFile = FileConfigurationPath;
-
-        if (!File.Exists(configFile))
-        {
-            Logger.Error($"Configuration file '{configFile}' was not found.");
-            return new YamlConfiguration();
-        }
-
-        var config = Parser.ParseYaml<YamlConfiguration>(configFile);
+        var config = Parser.ParseYaml<YamlConfiguration>(FileConfigurationPath);
 
         // TODO validate file format version https://github.com/open-telemetry/opentelemetry-configuration/blob/4f185c07eaaffc18c9ad34a46085e7ad6625fca0/README.md#file-format
         return config;
